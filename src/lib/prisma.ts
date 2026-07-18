@@ -8,7 +8,6 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createClient() {
-  // Prisma 7 connects through a JS driver adapter rather than a bundled engine.
   const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
   return new PrismaClient({
     adapter,
