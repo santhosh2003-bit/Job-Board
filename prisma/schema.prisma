@@ -1,0 +1,135 @@
+// Prisma schema for the Job Board
+// Data source is PostgreSQL (Neon / Vercel Postgres / Supabase all work).
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// A single job posting created by an employer.
+model Job {
+  id              String          @id @default(cuid())
+  title           String
+  company         String
+  companyLogo     String?
+  companyWebsite  String?
+  location        String
+  type            JobType
+  category        String
+  experienceLevel ExperienceLevel
+  remote          Boolean         @default(false)
+  salaryMin       Int?
+  salaryMax       Int?
+  currency        String          @default("USD")
+  description     String          @db.Text
+  requirements    String[]
+  benefits        String[]
+  tags            String[]
+  applyEmail      String?
+  featured        Boolean         @default(false)
+  status          JobStatus       @default(PUBLISHED)
+  postedAt        DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  applications    Application[]
+
+  @@index([status, postedAt])
+  @@index([category])
+  @@index([type])
+}
+
+/// An application submitted by a candidate for a given job.
+model Application {
+  id          String   @id @default(cuid())
+  jobId       String
+  job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  name        String
+  email       String
+  phone       String?
+  resumeUrl   String?
+  linkedinUrl String?
+  coverLetter String?  @db.Text
+  createdAt   DateTime @default(now())
+
+  @@index([jobId])
+}
+
+enum JobType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
+  TEMPORARY
+}
+
+enum ExperienceLevel {
+  INTERN
+  ENTRY
+  MID
+  SENIOR
+  LEAD
+}
+
+enum JobStatus {
+  PUBLISHED
+  DRAFT
+  CLOSED
+}
+
+// ---------------------------------------------------------------------------
+// ATS Resume Score Checker
+// ---------------------------------------------------------------------------
+
+/// A single, admin-configurable scoring dimension. The engine reads these at
+/// run time so weights/toggles change scoring without a code deploy.
+model AtsCriterion {
+  id          String   @id @default(cuid())
+  key         String   @unique // stable identifier the engine dispatches on
+  label       String
+  description String   @db.Text
+  weight      Int      @default(10) // relative weight (renormalised at runtime)
+  enabled     Boolean  @default(true)
+  order       Int      @default(0)
+  updatedAt   DateTime @updatedAt
+
+  @@index([order])
+}
+
+/// Admin-managed skill/keyword dictionary used for skills-coverage scoring.
+model AtsSkill {
+  id        String   @id @default(cuid())
+  name      String
+  category  String   @default("General")
+  aliases   String[]
+  weight    Int      @default(1)
+  createdAt DateTime @default(now())
+
+  @@unique([name, category])
+  @@index([category])
+}
+
+/// A stored ATS check result. Admins can browse every candidate's report.
+model AtsCheck {
+  id                String   @id @default(cuid())
+  candidateName     String?
+  candidateEmail    String?
+  resumeFileName    String
+  jobId             String?
+  jobTitle          String?
+  hasJobDescription Boolean  @default(false)
+  overallScore      Int
+  rating            String
+  breakdown         Json // CriterionResult[] — full per-criterion detail
+  matchedKeywords   String[]
+  missingKeywords   String[]
+  wordCount         Int      @default(0)
+  textPreview       String?  @db.Text
+  createdAt         DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([jobId])
+}

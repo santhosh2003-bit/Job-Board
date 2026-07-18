@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Reusable component primitives. In Tailwind v4 these are registered as
+   custom utilities via @utility so they can also be composed with @apply. */
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed;
+}
+@utility btn-primary {
+  @apply btn bg-indigo-600 text-white hover:bg-indigo-700;
+}
+@utility btn-secondary {
+  @apply btn border border-slate-300 bg-white text-slate-700 hover:bg-slate-50;
+}
+@utility btn-ghost {
+  @apply btn text-slate-600 hover:bg-slate-100;
+}
+@utility input {
+  @apply w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500;
+}
+@utility label {
+  @apply mb-1.5 block text-sm font-medium text-slate-700;
+}
+@utility card {
+  @apply rounded-xl border border-slate-200 bg-white shadow-sm;
+}
